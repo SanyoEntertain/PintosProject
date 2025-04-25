@@ -20,6 +20,8 @@
    of thread.h for details. */
 #define THREAD_MAGIC 0xcd6abf4b
 
+static struct list sleep_list;
+
 /* List of processes in THREAD_READY state, that is, processes
    that are ready to run but not actually running. */
 static struct list ready_list;
@@ -71,6 +73,48 @@ static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
 
+void thread_unsleep(int64_t ticks){
+
+  struct list_elem *e = list_begin(&sleep_list);
+  while (e != list_end(&sleep_list)) {
+	struct thread *t = list_entry(e, struct thread, elem);
+	
+	// if wakeup_tick < ticks, sleep_list -> ready_list
+	if (t->wakeup_tick < ticks) {
+	    e = list_remove(e);
+	    t->status = THREAD_READY;
+	    list_push_back(&ready_list, &t->elem);
+	    t->wakeup_tick = 0;
+	} else {
+	    e = list_next(e);
+	}
+  }
+
+}
+
+
+
+
+void thread_sleep(int64_t ticks){
+
+  struct thread *cur = thread_current ();
+  enum intr_level old_level;
+  
+  ASSERT (!intr_context ());
+
+  old_level = intr_disable ();
+  if (cur != idle_thread) 
+    list_push_back (&sleep_list, &cur->elem);
+
+  // set blocked
+  cur->status = THREAD_BLOCKED;
+  // tick to local tick.
+  cur->wakeup_tick = ticks; 
+  schedule ();
+  intr_set_level (old_level);
+}
+
+
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
    general and it is possible in this case only because loader.S
@@ -88,7 +132,8 @@ void
 thread_init (void) 
 {
   ASSERT (intr_get_level () == INTR_OFF);
-
+  
+  list_init(&sleep_list);
   lock_init (&tid_lock);
   list_init (&ready_list);
   list_init (&all_list);
