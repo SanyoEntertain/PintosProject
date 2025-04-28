@@ -20,6 +20,10 @@
    of thread.h for details. */
 #define THREAD_MAGIC 0xcd6abf4b
 
+// define load_avg
+static int load_avg;
+
+
 static struct list sleep_list;
 
 /* List of processes in THREAD_READY state, that is, processes
@@ -115,6 +119,8 @@ void thread_sleep(int64_t ticks){
 }
 
 
+
+
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
    general and it is possible in this case only because loader.S
@@ -133,6 +139,8 @@ thread_init (void)
 {
   ASSERT (intr_get_level () == INTR_OFF);
   
+  load_avg = 0;
+
   list_init(&sleep_list);
   lock_init (&tid_lock);
   list_init (&ready_list);
@@ -388,7 +396,8 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
-  thread_current ()->priority = new_priority;
+  
+  //  thread_current ()->priority = new_priority;
 }
 
 /* Returns the current thread's priority. */
@@ -403,6 +412,17 @@ void
 thread_set_nice (int nice UNUSED) 
 {
   /* Not yet implemented. */
+  struct thread *cur = thread_current();
+  enum intr_level old_level;
+  
+  ASSERT (!intr_context ());
+  
+  old_level = intr_disable();
+
+  // set nice.
+  cur->nice = nice;
+
+  intr_set_level(old_level);
 }
 
 /* Returns the current thread's nice value. */
@@ -410,7 +430,13 @@ int
 thread_get_nice (void) 
 {
   /* Not yet implemented. */
-  return 0;
+  struct thread *cur = thread_current();
+  
+  ASSERT (!intr_context ());
+
+  // no need to disable interrupt.
+
+  return cur->nice;
 }
 
 /* Returns 100 times the system load average. */
@@ -418,7 +444,8 @@ int
 thread_get_load_avg (void) 
 {
   /* Not yet implemented. */
-  return 0;
+   
+ 
 }
 
 /* Returns 100 times the current thread's recent_cpu value. */
@@ -426,7 +453,11 @@ int
 thread_get_recent_cpu (void) 
 {
   /* Not yet implemented. */
-  return 0;
+  struct thread *cur = thread_current();
+
+  ASSERT (!intr_context ());
+
+  return cur->recent_cpu * 100;
 }
 
 /* Idle thread.  Executes when no other thread is ready to run.
@@ -509,6 +540,10 @@ init_thread (struct thread *t, const char *name, int priority)
   ASSERT (name != NULL);
 
   memset (t, 0, sizeof *t);
+  // set recent_cpu, nice  
+  t->recent_cpu = 0;
+  t->nice = 0;
+
   t->status = THREAD_BLOCKED;
   strlcpy (t->name, name, sizeof t->name);
   t->stack = (uint8_t *) t + PGSIZE;
