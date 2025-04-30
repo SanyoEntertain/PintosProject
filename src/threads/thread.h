@@ -115,7 +115,7 @@ extern bool thread_mlfqs;
 
 // add thread_sleep
 void thread_sleep(int64_t ticks);
-
+void thread_unsleep(int64_t ticks);
 
 void thread_init (void);
 void thread_start (void);
@@ -139,6 +139,15 @@ void thread_yield (void);
 /* Performs some operation on thread t, given auxiliary data AUX. */
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);
+// new
+void thread_update_priority(struct thread *t);
+void thread_update_recent_cpu(struct thread *t); 
+void thread_update_load_avg(void);
+void thread_add_recent_cpu(void);
+void thread_update_all(void);
+//new end
+
+
 
 int thread_get_priority (void);
 void thread_set_priority (int);

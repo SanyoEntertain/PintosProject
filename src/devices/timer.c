@@ -173,7 +173,22 @@ timer_interrupt (struct intr_frame *args UNUSED)
   ticks++;
   thread_tick ();
   
+  // check need to wait. 
   thread_unsleep(ticks);
+
+  thread_add_recent_cpu();
+
+  if(timer_ticks() % TIMER_FREQ == 0) 
+  {
+    thread_update_load_avg();
+    thread_foreach(thread_update_recent_cpu, NULL);
+  }
+
+  if(timer_ticks() % 4 == 0)
+  {
+    thread_update_all();
+  }
+  
   
 }
 

@@ -11,6 +11,8 @@
 #include "threads/switch.h"
 #include "threads/synch.h"
 #include "threads/vaddr.h"
+#include "threads/fixed_point.h"
+
 #ifdef USERPROG
 #include "userprog/process.h"
 #endif
@@ -392,6 +394,67 @@ thread_foreach (thread_action_func *func, void *aux)
     }
 }
 
+
+// cal func (new)
+
+void thread_update_priority(struct thread *t)
+{
+  int term = x_to_int(div_xn(t->recent_cpu, 4)) - t->nice * 2;
+  
+  int priority =  PRI_MAX - term;
+  t->recent_cpu = priority;
+}
+
+void thread_update_recent_cpu(struct thread *t){
+  int decay = div_xy(mul_xn(load_avg, 2), add_xn(mul_xn(load_avg, 2), 1));
+  
+  t->recent_cpu = add_xn(mul_xy(decay, t->recent_cpu), t->nice);
+}
+
+
+void thread_update_load_avg(void)
+{
+  int a = div_xn(n_to_fp(59), 60);
+  int b = div_xn(n_to_fp(1), 60);
+  int ready_threads = list_size(&ready_list);
+
+  load_avg = add_xy(mul_xy(a, load_avg), mul_xn(b, ready_threads));
+}
+
+
+void thread_add_recent_cpu(void)
+{
+  struct thread *cur = thread_current();
+
+  // if not idle thread
+  if (cur != idle_thread)
+  {
+    cur->recent_cpu = add_xn(cur->recent_cpu, 1);
+  }
+}
+
+void thread_update_all(void)
+{ 
+  struct list_elem *e;
+
+  ASSERT (intr_get_level () == INTR_OFF);
+
+  for (e = list_begin (&all_list); e != list_end (&all_list);
+       e = list_next (e))
+    {
+      struct thread *t = list_entry (e, struct thread, allelem);
+      thread_update_recent_cpu(t);
+      thread_update_priority(t);
+    }
+}
+
+
+
+
+//cal func end
+
+
+
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
 thread_set_priority (int new_priority) 
@@ -443,8 +506,9 @@ thread_get_nice (void)
 int
 thread_get_load_avg (void) 
 {
-  /* Not yet implemented. */
-   
+  ASSERT (!intr_context ());
+
+  return mul_xn(load_avg, 100);
  
 }
 
@@ -457,7 +521,7 @@ thread_get_recent_cpu (void)
 
   ASSERT (!intr_context ());
 
-  return cur->recent_cpu * 100;
+  return mul_xn(cur->recent_cpu, 100);
 }
 
 /* Idle thread.  Executes when no other thread is ready to run.
