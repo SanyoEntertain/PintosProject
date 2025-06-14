@@ -479,11 +479,21 @@ update_all_priority(void){
 void
 update_load_avg(void)
 {
-  // fixed point로 계산해야 함.
+  // fixed point calculation: load_avg = (59/60)*load_avg + (1/60)*ready_threads
+  int ready_threads = 0;
+  struct list_elem *e;
+  for (e = list_begin(&ready_list); e != list_end(&ready_list); e = list_next(e)) {
+    struct thread *t = list_entry(e, struct thread, elem);
+    if (t != idle_thread) ready_threads++;
+  }
+  if (thread_current() != idle_thread)
+    ready_threads++;
+
   int term1 = mul_xy(div_xy(n_to_fp(59), n_to_fp(60)), load_avg);
-  int term2 = div_xy(n_to_fp(1), n_to_fp(60)) * list_size(&ready_list);
+  int term2 = mul_xy(div_xy(n_to_fp(1), n_to_fp(60)), n_to_fp(ready_threads));
   load_avg = add_xy(term1, term2);
 }
+
 
 
 /* Idle thread.  Executes when no other thread is ready to run.
