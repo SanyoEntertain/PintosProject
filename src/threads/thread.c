@@ -292,7 +292,8 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
-  list_push_back (&ready_list, &t->elem);
+  // 정렬?
+  list_insert_ordered (&ready_list, &t->elem, thread_priority_more, NULL);
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
@@ -385,6 +386,14 @@ thread_foreach (thread_action_func *func, void *aux)
       func (t, aux);
     }
 }
+bool
+thread_priority_more (const struct list_elem *a, const struct list_elem *b,
+                      void *aux UNUSED) {
+  const struct thread *ta = list_entry (a, struct thread, elem);
+  const struct thread *tb = list_entry (b, struct thread, elem);
+  return ta->priority > tb->priority;
+}
+
 
 /* Sets the current thread's priority to NEW_PRIORITY. */
 void
