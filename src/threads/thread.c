@@ -111,7 +111,7 @@ void thread_sleep(int64_t ticks){
   // set blocked
   cur->status = THREAD_BLOCKED;
   // tick to local tick.
-  cur->wakeup_tick = timer_ticks() +ticks; 
+  cur->wakeup_tick = ticks; 
   schedule ();
   intr_set_level (old_level);
 }
