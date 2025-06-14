@@ -390,8 +390,7 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
-  if (thread_mlfqs) return;
-  thread_current()->priority = new_priority;
+  // thread_current ()->priority = new_priority;
 }
 
 /* Returns the current thread's priority. */
@@ -417,7 +416,7 @@ int
 thread_get_nice (void) 
 {
   struct thread *t = thread_current();
-  if (t == idle_thread) return 0;
+  if (t == idle_thread) return;
   return t ->nice;
 }
 
@@ -466,8 +465,8 @@ update_all_recent_cpu(void)
 void
 update_priority(struct thread *t, void *aux){
   // round를 적용할 지 안할지도 고민해야 함.
-  int term2 = x_to_int_round(div_xn(t->recent_cpu, 4));
-  int priority = PRI_MAX - term2  + t->nice*2;
+  int term2 = x_to_int_round(div_xn(t->recent_cpu, 4)) + t->nice*2;
+  int priority = PRI_MAX - term2;
 
   // clamping
   if (priority > PRI_MAX) priority = PRI_MAX;
@@ -615,27 +614,7 @@ next_thread_to_run (void)
 {
   if (list_empty (&ready_list))
     return idle_thread;
-  else {
-   if (thread_mlfqs) {
-      struct list_elem *e;
-      struct thread *highest = NULL;
-      struct list_elem *highest_elem = NULL;
-      
-      for (e = list_begin(&ready_list); e != list_end(&ready_list); e = list_next(e)) {
-        struct thread *t = list_entry(e, struct thread, elem);
-        if (highest == NULL || t->priority > highest->priority) {
-          highest = t;
-          highest_elem = e;
-        }
-      }
-      
-      if (highest_elem != NULL) {
-        list_remove(highest_elem);
-        return highest;
-      }
-    }
-  }
-    // 기본 FIFO 스케줄링
+  else
     return list_entry (list_pop_front (&ready_list), struct thread, elem);
 }
 
