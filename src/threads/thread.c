@@ -400,7 +400,9 @@ thread_priority_more (const struct list_elem *a, const struct list_elem *b,
 void
 thread_set_priority (int new_priority) 
 {
-  // thread_current ()->priority = new_priority;
+  if(thread_mlfqs)
+    return;
+  thread_current ()->priority = new_priority;
 }
 
 /* Returns the current thread's priority. */
@@ -414,34 +416,47 @@ thread_get_priority (void) {
 /* Sets the current thread's nice value to NICE. */
 void
 thread_set_nice (int nice) {
+  // disable interrupts
+  enum intr_level old_level = intr_disable();
   struct thread *t = thread_current();
   if (t == idle_thread) return;
   t->nice = nice;
+  intr_set_level(old_level);
 }
 
 /* Returns the current thread's nice value. */
 int
 thread_get_nice (void) 
 {
+   // disable interrupts
+  enum intr_level old_level = intr_disable();
   struct thread *t = thread_current();
   if (t == idle_thread) return 0;
   return t ->nice;
+  intr_set_level(old_level);
 }
 
 /* Returns 100 times the system load average. */
 int
 thread_get_load_avg (void) 
 {
+  enum intr_level old_level = intr_disable();
+  
+  int val = x_to_int_round(mul_xn(load_avg, 100));
+  intr_set_level(old_level);
   // 부동소수점 방식말고 다시 변환 후 return.
-  return x_to_int_round(mul_xn(load_avg, 100));
+  return val;
 }
 
 /* Returns 100 times the current thread's recent_cpu value. */
 int
 thread_get_recent_cpu (void) {
+  enum intr_level old_level = intr_disable();
   struct thread *t = thread_current();
+  intr_set_level(old_level);
   if (t == idle_thread) return 0;
   return x_to_int_round(mul_xn(t->recent_cpu, 100));
+  
 }
 
 // 현재 스레드만 recent_cpu +1 추가.
@@ -472,9 +487,8 @@ void
 update_priority(struct thread *t, void *aux){
   if (t == idle_thread)
     return;
-
   // round를 적용할 지 안할지도 고민해야 함.
-  int priority = sub_xy(sub_xy(n_to_fp(PRI_MAX), div_xn(t->recent_cpu, 4)), n_to_fp(t->nice*2));
+  int priority = x_to_int(sub_xy(sub_xy(n_to_fp(PRI_MAX), div_xn(t->recent_cpu, 4)), n_to_fp(t->nice*2)));
 
   // clamping
   if (priority > PRI_MAX) priority = PRI_MAX;
@@ -491,15 +505,15 @@ update_all_priority(void){
 void
 update_load_avg(void)
 {
-  // fixed point calculation: load_avg = (59/60)*load_avg + (1/60)*ready_threads
+  // load_avg = (59/60)*load_avg + (1/60)*ready_threads
   int ready_threads = 0;
   struct list_elem *e;
-  for (e = list_begin(&ready_list); e != list_end(&ready_list); e = list_next(e)) {
-    struct thread *t = list_entry(e, struct thread, elem);
-    if (t != idle_thread) ready_threads++;
+  if(thread_current() == idle_thread){
+    ready_threads = list_size(&ready_list);
   }
-  if (thread_current() != idle_thread)
-    ready_threads++;
+  else{
+    ready_threads = list_size(&ready_list) + 1;
+  }
 
   int term1 = mul_xy(div_xy(n_to_fp(59), n_to_fp(60)), load_avg);
   int term2 = mul_xy(div_xy(n_to_fp(1), n_to_fp(60)), n_to_fp(ready_threads));

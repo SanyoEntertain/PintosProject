@@ -172,7 +172,6 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
-  thread_unsleep(ticks);
 
   // add recent_cpu 실행중인 스레드에.
   add_recent_cpu();
@@ -187,7 +186,8 @@ timer_interrupt (struct intr_frame *args UNUSED)
   if(ticks % 4 == 0){
     update_all_priority();
   }
-  
+  // 마지막에 깨우기.
+  thread_unsleep(ticks);
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer
