@@ -391,7 +391,6 @@ void
 thread_set_priority (int new_priority) 
 {
   // thread_current ()->priority = new_priority;
-  thread_current() -> priority = PRI_MIN;
 }
 
 /* Returns the current thread's priority. */
@@ -408,8 +407,6 @@ thread_set_nice (int nice) {
   struct thread *t = thread_current();
   if (t == idle_thread) return;
   t->nice = nice;
-  update_priority(t, NULL);
-  thread_yield();
 }
 
 /* Returns the current thread's nice value. */
@@ -425,7 +422,7 @@ thread_get_nice (void)
 int
 thread_get_load_avg (void) 
 {
-  return load_avg;
+  return load_avg * 100;
 }
 
 /* Returns 100 times the current thread's recent_cpu value. */
