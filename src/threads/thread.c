@@ -15,6 +15,10 @@
 #include "userprog/process.h"
 #endif
 
+#include "fixed_point.h"
+
+static int load_avg = 0;
+
 /* Random value for struct thread's `magic' member.
    Used to detect stack overflow.  See the big comment at the top
    of thread.h for details. */
@@ -91,8 +95,6 @@ void thread_unsleep(int64_t ticks){
   }
 
 }
-
-
 
 
 void thread_sleep(int64_t ticks){
@@ -388,47 +390,104 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
-  thread_current ()->priority = new_priority;
+  // thread_current ()->priority = new_priority;
 }
 
 /* Returns the current thread's priority. */
 int
 thread_get_priority (void) 
 {
-  return thread_current ()->priority;
+  struct thread *t = thread_current();
+  if (t == idle_thread) return;
+  return t->priority;
 }
 
 /* Sets the current thread's nice value to NICE. */
 void
-thread_set_nice (int nice UNUSED) 
+thread_set_nice (int nice) 
 {
-  /* Not yet implemented. */
+  struct thread *t = thread_current();
+  if (t == idle_thread) return;
+  t ->nice = nice;
 }
 
 /* Returns the current thread's nice value. */
 int
 thread_get_nice (void) 
 {
-  /* Not yet implemented. */
-  return 0;
+  struct thread *t = thread_current();
+  if (t == idle_thread) return;
+  return t ->nice;
 }
 
 /* Returns 100 times the system load average. */
 int
 thread_get_load_avg (void) 
 {
-  /* Not yet implemented. */
-  return 0;
+  return load_avg;
 }
 
 /* Returns 100 times the current thread's recent_cpu value. */
 int
 thread_get_recent_cpu (void) 
 {
-  /* Not yet implemented. */
-  return 0;
+  struct thread *t = thread_current();
+  if (t == idle_thread) return;
+  return t->recent_cpu * 100;
 }
-
+
+// !! Add to .h file 나중에 추가!!
+
+// 현재 스레드만 recent_cpu +1 추가.
+void add_recent_cpu(void){
+  struct thread *t = thread_current();
+  if (t == idle_thread) return;
+  t->recent_cpu = add_xn(t->recent_cpu, 1);
+}
+
+
+// thread_foreach를 사용하기 위해 있는 함수.
+void
+update_recent_cpu(struct thread *t, void *aux)
+{
+  int decay = div_xy(load_avg * 2, add_xn(load_avg*2, 1));
+  t->recent_cpu = add_xn(mul_xy(decay, t->recent_cpu), t->nice);
+}
+
+void
+update_all_recent_cpu(void)
+{
+  thread_foreach(update_recent_cpu, NULL);
+}
+
+void
+update_priority(struct thread *t, void *aux){
+  // round를 적용할 지 안할지도 고민해야 함.
+  int term2 = x_to_int_round(div_xn(t->recent_cpu, 4)) + t->nice*2;
+  int priority = PRI_MAX - term2;
+
+  // clamping
+  if (priority > PRI_MAX) priority = PRI_MAX;
+  if (priority < PRI_MIN) priority = PRI_MIN;
+
+  t->priority = priority;
+}
+
+void
+update_all_priority(void){
+  thread_foreach(update_priority, NULL);
+}
+
+void
+update_load_avg(void)
+{
+  // fixed point로 계산해야 함.
+  int term1 = mul_xy(div_xy(n_to_fp(59), n_to_fp(60)), load_avg);
+  int term2 = div_xy(n_to_fp(1), n_to_fp(6)) * list_size(&ready_list);
+  load_avg = add_xy(term1, term2);
+}
+
+
 /* Idle thread.  Executes when no other thread is ready to run.
 
    The idle thread is initially put on the ready list by
@@ -477,7 +536,7 @@ kernel_thread (thread_func *function, void *aux)
   function (aux);       /* Execute the thread function. */
   thread_exit ();       /* If function() returns, kill the thread. */
 }
-
+
 /* Returns the running thread. */
 struct thread *
 running_thread (void) 
@@ -514,6 +573,9 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
   t->magic = THREAD_MAGIC;
+
+  t->nice = 0;
+  t->recent_cpu = 0;
   list_push_back (&all_list, &t->allelem);
 }
 
