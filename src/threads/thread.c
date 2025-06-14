@@ -81,19 +81,20 @@ void thread_unsleep(int64_t ticks){
 
   struct list_elem *e = list_begin(&sleep_list);
   while (e != list_end(&sleep_list)) {
-	struct thread *t = list_entry(e, struct thread, elem);
-	
-	// if wakeup_tick < ticks, sleep_list -> ready_list
-	if (t->wakeup_tick <= ticks) {
-	    e = list_remove(e);
-	    t->status = THREAD_READY;
-	    list_push_back(&ready_list, &t->elem);
-	    t->wakeup_tick = 0;
-	} else {
-	    e = list_next(e);
-	}
+    struct thread *t = list_entry(e, struct thread, elem);
+    
+    // if wakeup_tick < ticks, sleep_list -> ready_list
+    if (t->wakeup_tick <= ticks) {
+        e = list_remove(e);
+        t->status = THREAD_READY;
+        // priority 순서대로 정렬.
+        list_insert_ordered (&ready_list, &t->elem, thread_priority_more, NULL);
+        t->wakeup_tick = 0;
+    } else {
+        e = list_next(e);
+    }
+    
   }
-
 }
 
 
@@ -473,6 +474,9 @@ update_all_recent_cpu(void)
 
 void
 update_priority(struct thread *t, void *aux){
+  if (t == idle_thread)
+    return;
+
   // round를 적용할 지 안할지도 고민해야 함.
   int term2 = x_to_int_round(div_xn(t->recent_cpu, 4)) + t->nice*2;
   int priority = PRI_MAX - term2;
