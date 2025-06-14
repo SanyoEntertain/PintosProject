@@ -422,7 +422,8 @@ thread_get_nice (void)
 int
 thread_get_load_avg (void) 
 {
-  return load_avg * 100;
+  // 부동소수점 방식말고 다시 변환 후 return.
+  return x_to_int_round(mul_xn(load_avg, 100));
 }
 
 /* Returns 100 times the current thread's recent_cpu value. */
