@@ -17,7 +17,7 @@
 
 #include "fixed_point.h"
 
-static int load_avg = 0;
+int load_avg = 0;
 
 /* Random value for struct thread's `magic' member.
    Used to detect stack overflow.  See the big comment at the top
