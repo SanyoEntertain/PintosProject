@@ -365,7 +365,7 @@ thread_yield (void)
 
   old_level = intr_disable ();
   if (cur != idle_thread) 
-    list_push_back (&ready_list, &cur->elem);
+    list_insert_ordered (&ready_list, &t->elem, thread_priority_more, NULL);
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -417,8 +417,6 @@ thread_set_nice (int nice) {
   struct thread *t = thread_current();
   if (t == idle_thread) return;
   t->nice = nice;
-  // 우선순위 계산
-  update_priority(t, NULL);
 }
 
 /* Returns the current thread's nice value. */
@@ -426,7 +424,7 @@ int
 thread_get_nice (void) 
 {
   struct thread *t = thread_current();
-  if (t == idle_thread) return;
+  if (t == idle_thread) return 0;
   return t ->nice;
 }
 
@@ -445,8 +443,6 @@ thread_get_recent_cpu (void) {
   if (t == idle_thread) return 0;
   return x_to_int_round(mul_xn(t->recent_cpu, 100));
 }
-
-// !! Add to .h file 나중에 추가!!
 
 // 현재 스레드만 recent_cpu +1 추가.
 void
@@ -478,8 +474,7 @@ update_priority(struct thread *t, void *aux){
     return;
 
   // round를 적용할 지 안할지도 고민해야 함.
-  int term2 = x_to_int_round(div_xn(t->recent_cpu, 4)) + t->nice*2;
-  int priority = PRI_MAX - term2;
+  int priority = sub_xy(sub_xy(n_to_fp(PRI_MAX), div_xn(t->recent_cpu, 4)), n_to_fp(t->nice*2));
 
   // clamping
   if (priority > PRI_MAX) priority = PRI_MAX;
