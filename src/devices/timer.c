@@ -175,17 +175,19 @@ timer_interrupt (struct intr_frame *args UNUSED)
 
   // add recent_cpu 실행중인 스레드에.
   add_recent_cpu();
-
-  // 1sec
-  if(ticks % TIMER_FREQ == 0){
-    update_load_avg();
-    update_all_recent_cpu();
+  // mlfq 테스트만 실행.
+  if (thread_mlfqs){
+    // 1sec
+    if(ticks % TIMER_FREQ == 0){
+      update_load_avg();
+      update_all_recent_cpu();
+    }
+    // update thread priority.
+    if(ticks % 4 == 0){
+      update_all_priority();
+    }
   }
-
-  // update thread priority.
-  if(ticks % 4 == 0){
-    update_all_priority();
-  }
+  
   // 마지막에 깨우기.
   thread_unsleep(ticks);
 }
