@@ -84,7 +84,7 @@ void thread_unsleep(int64_t ticks){
 	struct thread *t = list_entry(e, struct thread, elem);
 	
 	// if wakeup_tick < ticks, sleep_list -> ready_list
-	if (t->wakeup_tick < ticks) {
+	if (t->wakeup_tick <= ticks) {
 	    e = list_remove(e);
 	    t->status = THREAD_READY;
 	    list_push_back(&ready_list, &t->elem);
