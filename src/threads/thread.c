@@ -407,6 +407,8 @@ thread_set_nice (int nice) {
   struct thread *t = thread_current();
   if (t == idle_thread) return;
   t->nice = nice;
+  // 우선순위 계산
+  update_priority(t, NULL);
 }
 
 /* Returns the current thread's nice value. */
