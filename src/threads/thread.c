@@ -391,24 +391,25 @@ void
 thread_set_priority (int new_priority) 
 {
   // thread_current ()->priority = new_priority;
+  thread_current() -> priority = PRI_MIN;
 }
 
 /* Returns the current thread's priority. */
 int
-thread_get_priority (void) 
-{
+thread_get_priority (void) {
   struct thread *t = thread_current();
-  if (t == idle_thread) return;
+  if (t == idle_thread) return PRI_MIN;
   return t->priority;
 }
 
 /* Sets the current thread's nice value to NICE. */
 void
-thread_set_nice (int nice) 
-{
+thread_set_nice (int nice) {
   struct thread *t = thread_current();
   if (t == idle_thread) return;
-  t ->nice = nice;
+  t->nice = nice;
+  update_priority(t, NULL);
+  thread_yield();
 }
 
 /* Returns the current thread's nice value. */
@@ -429,17 +430,17 @@ thread_get_load_avg (void)
 
 /* Returns 100 times the current thread's recent_cpu value. */
 int
-thread_get_recent_cpu (void) 
-{
+thread_get_recent_cpu (void) {
   struct thread *t = thread_current();
-  if (t == idle_thread) return;
-  return t->recent_cpu * 100;
+  if (t == idle_thread) return 0;
+  return x_to_int_round(mul_xn(t->recent_cpu, 100));
 }
 
 // !! Add to .h file 나중에 추가!!
 
 // 현재 스레드만 recent_cpu +1 추가.
-void add_recent_cpu(void){
+void
+add_recent_cpu(void) {
   struct thread *t = thread_current();
   if (t == idle_thread) return;
   t->recent_cpu = add_xn(t->recent_cpu, 1);
