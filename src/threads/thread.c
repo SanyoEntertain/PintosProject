@@ -451,6 +451,7 @@ add_recent_cpu(void) {
 void
 update_recent_cpu(struct thread *t, void *aux)
 {
+  if (t == idle_thread) return;
   int decay = div_xy(load_avg * 2, add_xn(load_avg*2, 1));
   t->recent_cpu = add_xn(mul_xy(decay, t->recent_cpu), t->nice);
 }
