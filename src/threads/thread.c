@@ -481,7 +481,7 @@ update_load_avg(void)
 {
   // fixed point로 계산해야 함.
   int term1 = mul_xy(div_xy(n_to_fp(59), n_to_fp(60)), load_avg);
-  int term2 = div_xy(n_to_fp(1), n_to_fp(6)) * list_size(&ready_list);
+  int term2 = div_xy(n_to_fp(1), n_to_fp(60)) * list_size(&ready_list);
   load_avg = add_xy(term1, term2);
 }
 
