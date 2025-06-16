@@ -56,6 +56,7 @@ process_execute (const char *file_name)
 
 // 스택에 인자 저장하는 함수.
 void store_in_stack(int argc, char* argv[], void**stackpointer){
+  printf("%d, %s", argc, argv[0]);
   // esp를 -4하고, 저장하고를 반복해야 한다.
   void* esp = *stackpointer;
 
@@ -63,6 +64,7 @@ void store_in_stack(int argc, char* argv[], void**stackpointer){
   int i, j;
   for(i = argc-1; i>=0; i--){
     for(j = strlen(argv[i]); j >= 0; j--){
+      printf("%d %d", i, j);
       printf("store_in_stack: esp = %p\n", esp);
       esp--;
       *(char*)esp = argv[i][j];
