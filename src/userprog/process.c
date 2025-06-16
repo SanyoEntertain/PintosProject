@@ -60,7 +60,7 @@ void store_in_stack(int argc, char* argv[], void**stackpointer){
   void* esp = *stackpointer;
 
   char* paths[argc];
-
+  int i, j;
   for(int i = argc-1; i>=0; i--){
     for(int j = strlen(argv[i]); j >= 0; j--){
       esp--;
