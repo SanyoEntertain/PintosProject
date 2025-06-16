@@ -118,7 +118,7 @@ start_process (void *file_name_)
   success = load(argv[0], &if_.eip, &if_.esp);
 
   /* If load failed, quit. */
-  palloc_free_page(file_name_copy);
+
   if (!success)
     thread_exit();
 
@@ -126,6 +126,8 @@ start_process (void *file_name_)
   store_in_stack(argc, argv, &if_.esp);
   hex_dump(if_.esp , if_.esp , PHYS_BASE - if_.esp , true);
 
+  palloc_free_page(file_name_copy);
+  palloc_free_page(file_name);
   /* Start the user process */
   asm volatile ("movl %0, %%esp; jmp intr_exit" : : "g" (&if_) : "memory");
   NOT_REACHED();
