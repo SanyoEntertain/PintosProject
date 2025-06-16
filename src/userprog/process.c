@@ -47,7 +47,6 @@ process_execute (const char *file_name)
 
 // 스택에 인자 저장하는 함수.
 void store_in_stack(int argc, char* argv[], void**stackpointer){
-  printf("첫 인자: %d, %s, %p\n", argc, argv[0], *stackpointer);
   void* esp = *stackpointer;
   void* arg_addr[argc];
   int i, j;
@@ -58,7 +57,7 @@ void store_in_stack(int argc, char* argv[], void**stackpointer){
     esp -= len;
     memcpy(esp, argv[i], len);
     arg_addr[i] = esp;
-    printf("%s in %p\n", argv[i], esp);
+    printf("%s in %p\n", (char*)esp, esp);
   }
   // 워드 정렬
   uintptr_t align = (uintptr_t)esp % 4;
