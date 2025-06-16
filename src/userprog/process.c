@@ -59,39 +59,39 @@ void store_in_stack(int argc, char* argv[], void**stackpointer){
   // esp를 -4하고, 저장하고를 반복해야 한다.
   void* esp = *stackpointer;
 
-  char* paths[argc];
+  void* paths[argc];
   int i, j;
   for(i = argc-1; i>=0; i--){
     for(j = strlen(argv[i]); j >= 0; j--){
       esp--;
       *(char*)esp = argv[i][j];
     }
-    paths[i] = (char*)esp;
+    paths[i] = (void*)esp;
   }
   // 패딩을 적용해야 함.
-  int padding = (int)esp % 4;
+  int padding = (uintptr_t)esp % 4;
   for(i = 0; i < padding; i++){
     esp--;
     *(uint8_t*)esp = 0;
   }
   // argv[4]를 대체하기.
   esp -= 4;
-  *(void **)esp = NULL;
+  *(char*)esp = (char*)0;
 
   for(i = argc-1; i>=0; i++){
     esp -= 4;
-    *(char**)esp = paths[i];
+    *(char*)esp = *(char*)paths[i];
   }
-
-  void* argv_ptr = esp;
+  // 주의 필요!
+  char** argv_ptr = (char**)esp;
   esp -= 4;
-  *(void**)esp = argv_ptr;
+  *(char**)esp = argv_ptr;
 
   esp -= 4;
   *(int*)esp = argc;
 
   esp -= 4;
-  *(void**)esp = 0;
+  *(uint32_t *)esp = 0;
 }
 
 /* A thread function that loads a user process and starts it
