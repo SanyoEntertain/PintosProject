@@ -63,6 +63,7 @@ void store_in_stack(int argc, char* argv[], void**stackpointer){
   int i, j;
   for(i = argc-1; i>=0; i--){
     for(j = strlen(argv[i]); j >= 0; j--){
+      printf("store_in_stack: esp = %p\n", esp);
       esp--;
       *(char*)esp = argv[i][j];
     }
@@ -92,14 +93,13 @@ void store_in_stack(int argc, char* argv[], void**stackpointer){
 
   esp -= 4;
   *(uint32_t *)esp = 0;
-  printf("store_in_stack: esp = %p\n", esp);
 }
 
 /* A thread function that loads a user process and starts it
    running. */
 static void
 start_process (void *file_name_)
-{
+{ 
   char *file_name = file_name_;
   struct intr_frame if_;
   bool success;
@@ -137,7 +137,6 @@ start_process (void *file_name_)
      and jump to it. */
   asm volatile ("movl %0, %%esp; jmp intr_exit" : : "g" (&if_) : "memory");
   NOT_REACHED ();
-  printf("Final ESP after store_in_stack: %p\n", if_.esp);
 }
 
 /* Waits for thread TID to die and returns its exit status.  If
