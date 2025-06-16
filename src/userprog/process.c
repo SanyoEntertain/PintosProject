@@ -38,17 +38,8 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
-  char *argv[64];
-  int argc = 0;
-  char *token, *save_ptr;
-  for (token = strtok_r(fn_copy, " ", &save_ptr); token != NULL;
-      token = strtok_r(NULL, " ", &save_ptr)) {
-    argv[argc++] = token;
-  }
-
-  // 나중에 arg도 넘겨줘야 함.
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (argv[0], PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
   return tid;
@@ -142,7 +133,6 @@ start_process (void *file_name_)
   /* Start the user process */
   asm volatile ("movl %0, %%esp; jmp intr_exit" : : "g" (&if_) : "memory");
   NOT_REACHED();
-
 }
 
 /* Waits for thread TID to die and returns its exit status.  If
