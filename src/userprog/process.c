@@ -48,6 +48,8 @@ process_execute (const char *file_name)
 // 스택에 인자 저장하는 함수.
 void store_in_stack(int argc, char* argv[], void**stackpointer){
   void* esp = *stackpointer;
+  printf("esp start: %p\n", esp);
+  printf("first arg: %s\n", argv[1]);
   void* arg_addr[argc];
   int i, j;
   
@@ -117,7 +119,6 @@ start_process (void *file_name_)
 
   /* If load failed, quit. */
   palloc_free_page(file_name_copy);
-  palloc_free_page(file_name);
   if (!success)
     thread_exit();
 
