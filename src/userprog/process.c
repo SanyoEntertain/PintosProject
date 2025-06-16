@@ -61,8 +61,8 @@ void store_in_stack(int argc, char* argv[], void**stackpointer){
 
   char* paths[argc];
   int i, j;
-  for(int i = argc-1; i>=0; i--){
-    for(int j = strlen(argv[i]); j >= 0; j--){
+  for(i = argc-1; i>=0; i--){
+    for(j = strlen(argv[i]); j >= 0; j--){
       esp--;
       *(char*)esp = argv[i][j];
     }
@@ -70,7 +70,7 @@ void store_in_stack(int argc, char* argv[], void**stackpointer){
   }
   // 패딩을 적용해야 함.
   int padding = (int)esp % 4;
-  for(int i = 0; i < padding; i++){
+  for(i = 0; i < padding; i++){
     esp--;
     *(uint8_t*)esp = 0;
   }
@@ -78,7 +78,7 @@ void store_in_stack(int argc, char* argv[], void**stackpointer){
   esp -= 4;
   *(void **)esp = NULL;
 
-  for(int i = argc-1; i>=0; i++){
+  for(i = argc-1; i>=0; i++){
     esp -= 4;
     *(char**)esp = paths[i];
   }
