@@ -102,7 +102,14 @@ void store_in_stack(int argc, char* argv[], void**stackpointer){
 static void
 start_process (void *file_name_)
 { 
-  char *file_name = file_name_;
+   char *file_name = file_name_;
+
+  // 파싱을 위해 복사본을 만든다.
+  char *file_name_copy = palloc_get_page(0);
+  if (file_name_copy == NULL)
+    thread_exit();
+  strlcpy(file_name_copy, file_name, PGSIZE);
+
   struct intr_frame if_;
   bool success;
 
@@ -110,8 +117,8 @@ start_process (void *file_name_)
   char *argv[64];
   int argc = 0;
   char *token, *save_ptr;
-  for (token = strtok_r(file_name, " ", &save_ptr); token != NULL;
-      token = strtok_r(NULL, " ", &save_ptr)) {
+  for (token = strtok_r(file_name_copy, " ", &save_ptr); token != NULL;
+       token = strtok_r(NULL, " ", &save_ptr)) {
     argv[argc++] = token;
   }
 
@@ -120,25 +127,22 @@ start_process (void *file_name_)
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
-  success = load (argv[0], &if_.eip, &if_.esp);
+  success = load(argv[0], &if_.eip, &if_.esp);
 
   /* If load failed, quit. */
-  palloc_free_page (file_name);
-  if (!success) 
-    thread_exit ();
+  palloc_free_page(file_name_copy);
+  palloc_free_page(file_name);
+  if (!success)
+    thread_exit();
 
   // stack에 저장필요.
   store_in_stack(argc, argv, &if_.esp);
   hex_dump(if_.esp , if_.esp , PHYS_BASE - if_.esp , true);
 
-  /* Start the user process by simulating a return from an
-     interrupt, implemented by intr_exit (in
-     threads/intr-stubs.S).  Because intr_exit takes all of its
-     arguments on the stack in the form of a `struct intr_frame',
-     we just point the stack pointer (%esp) to our stack frame
-     and jump to it. */
+  /* Start the user process */
   asm volatile ("movl %0, %%esp; jmp intr_exit" : : "g" (&if_) : "memory");
-  NOT_REACHED ();
+  NOT_REACHED();
+
 }
 
 /* Waits for thread TID to die and returns its exit status.  If
