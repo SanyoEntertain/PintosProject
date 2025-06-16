@@ -38,11 +38,60 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
+  char *argv[64];
+  int argc = 0;
+  char *token, *save_ptr;
+  for (token = strtok_r(fn_copy, " ", &save_ptr); token != NULL;
+      token = strtok_r(NULL, " ", &save_ptr)) {
+    argv[argc++] = token;
+  }
+
+  // 나중에 arg도 넘겨줘야 함.
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (argv[0], PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
   return tid;
+}
+
+// 스택에 인자 저장하는 함수.
+void store_in_stack(int argc, char* argv[], void**stackpointer){
+  // esp를 -4하고, 저장하고를 반복해야 한다.
+  void* esp = *stackpointer;
+
+  char* paths[argc];
+
+  for(int i = argc-1; i>=0; i--){
+    for(int j = strlen(argv[i]); j >= 0; j--){
+      esp--;
+      *(char*)esp = argv[i][j];
+    }
+    paths[i] = (char*)esp;
+  }
+  // 패딩을 적용해야 함.
+  int padding = (int)esp % 4;
+  for(int i = 0; i < padding; i++){
+    esp--;
+    *(uint8_t*)esp = 0;
+  }
+  // argv[4]를 대체하기.
+  esp -= 4;
+  *(void **)esp = NULL;
+
+  for(int i = argc-1; i>=0; i++){
+    esp -= 4;
+    *(char**)esp = paths[i];
+  }
+
+  void* argv_ptr = esp;
+  esp -= 4;
+  *(void**)esp = argv_ptr;
+
+  esp -= 4;
+  *(int*)esp = argc;
+
+  esp -= 4;
+  *(void**)esp = 0;
 }
 
 /* A thread function that loads a user process and starts it
@@ -54,17 +103,30 @@ start_process (void *file_name_)
   struct intr_frame if_;
   bool success;
 
+  // 파싱 진행.
+  char *argv[64];
+  int argc = 0;
+  char *token, *save_ptr;
+  for (token = strtok_r(file_name, " ", &save_ptr); token != NULL;
+      token = strtok_r(NULL, " ", &save_ptr)) {
+    argv[argc++] = token;
+  }
+
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
-  success = load (file_name, &if_.eip, &if_.esp);
+  success = load (argv[0], &if_.eip, &if_.esp);
 
   /* If load failed, quit. */
   palloc_free_page (file_name);
   if (!success) 
     thread_exit ();
+
+  // stack에 저장필요.
+  store_in_stack(argc, argv, &if_.esp);
+  hex_dump(if_.esp , if_.esp , PHYS_BASE - if_.esp , true);
 
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
