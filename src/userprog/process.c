@@ -47,9 +47,11 @@ process_execute (const char *file_name)
 
 // 스택에 인자 저장하는 함수.
 void store_in_stack(int argc, char* argv[], void**stackpointer){
+  print("첫 인자: %d, %s, %p\n", argc, argv[0], *stackpointer);
   void* esp = *stackpointer;
   void* arg_addr[argc];
   int i, j;
+  
   // 문자열을 스택에 복사
   for(i = argc-1; i>=0; i--){
     int len = strlen(argv[i]) + 1;
@@ -89,7 +91,6 @@ start_process (void *file_name_)
 { 
   char *file_name = file_name_;
 
-  // 파싱을 위해 복사본을 만든다.
   char *file_name_copy = palloc_get_page(0);
   if (file_name_copy == NULL)
     thread_exit();
