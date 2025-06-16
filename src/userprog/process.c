@@ -123,7 +123,7 @@ start_process (void *file_name_)
     thread_exit();
 
   // stack에 저장필요.
-  store_in_stack(argc, &argv, &if_.esp);
+  store_in_stack(argc, argv, &if_.esp);
   hex_dump(if_.esp , if_.esp , PHYS_BASE - if_.esp , true);
 
   /* Start the user process */
