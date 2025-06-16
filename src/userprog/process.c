@@ -47,7 +47,7 @@ process_execute (const char *file_name)
 
 // 스택에 인자 저장하는 함수.
 void store_in_stack(int argc, char* argv[], void**stackpointer){
-  printf("첫 인자: %d, %s, %p\n", argc, , *argv[0], *stackpointer);
+  printf("첫 인자: %d, %s, %p\n", argc, argv[0], *stackpointer);
   void* esp = *stackpointer;
   void* arg_addr[argc];
   int i, j;
@@ -90,6 +90,7 @@ static void
 start_process (void *file_name_)
 { 
   char *file_name = file_name_;
+  printf("file name: %s\n", file_name);
 
   char *file_name_copy = palloc_get_page(0);
   if (file_name_copy == NULL)
@@ -107,7 +108,7 @@ start_process (void *file_name_)
        token = strtok_r(NULL, " ", &save_ptr)) {
     argv[argc++] = token;
   }
-  printf("program name: %s\n", *argv[1]);
+  printf("first arg: %s\n", argv[1]);
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
