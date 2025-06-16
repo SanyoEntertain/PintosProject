@@ -56,6 +56,7 @@ void store_in_stack(int argc, char* argv[], void**stackpointer){
     esp -= len;
     memcpy(esp, argv[i], len);
     arg_addr[i] = esp;
+    printf("%s in %p\n", argv[i], esp);
   }
   // 워드 정렬
   uintptr_t align = (uintptr_t)esp % 4;
@@ -86,7 +87,7 @@ void store_in_stack(int argc, char* argv[], void**stackpointer){
 static void
 start_process (void *file_name_)
 { 
-   char *file_name = file_name_;
+  char *file_name = file_name_;
 
   // 파싱을 위해 복사본을 만든다.
   char *file_name_copy = palloc_get_page(0);
