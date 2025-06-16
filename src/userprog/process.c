@@ -47,45 +47,38 @@ process_execute (const char *file_name)
 
 // 스택에 인자 저장하는 함수.
 void store_in_stack(int argc, char* argv[], void**stackpointer){
-  printf("%d, %s", argc, argv[0]);
-  // esp를 -4하고, 저장하고를 반복해야 한다.
   void* esp = *stackpointer;
-
-  void* paths[argc];
+  void* arg_addr[argc];
   int i, j;
+  // 문자열을 스택에 복사
   for(i = argc-1; i>=0; i--){
-    for(j = strlen(argv[i]); j >= 0; j--){
-      printf("%d %d", i, j);
-      printf("store_in_stack: esp = %p\n", esp);
-      esp--;
-      *(char*)esp = argv[i][j];
-    }
-    paths[i] = (void*)esp;
+    int len = strlen(argv[i]) + 1;
+    esp -= len;
+    memcpy(esp, argv[i], len);
+    arg_addr[i] = esp;
   }
-  // 패딩을 적용해야 함.
-  int padding = (uintptr_t)esp % 4;
-  for(i = 0; i < padding; i++){
-    esp--;
-    *(uint8_t*)esp = 0;
+  // 워드 정렬
+  uintptr_t align = (uintptr_t)esp % 4;
+  if (align) {
+    esp -= align;
+    memset(esp, 0, align);
   }
-  // argv[4]를 대체하기.
+  // argv 포인터들 저장
   esp -= 4;
-  *(char*)esp = (char*)0;
-
-  for(i = argc-1; i>=0; i++){
+  *(void**)esp = NULL; // argv[argc] = NULL
+  for(i = argc-1; i>=0; i--){
     esp -= 4;
-    *(char*)esp = *(char*)paths[i];
+    *(void**)esp = arg_addr[i];
   }
-  // 주의 필요!
-  char** argv_ptr = (char**)esp;
-  esp -= 4;
-  *(char**)esp = argv_ptr;
-
+  // argv 포인터의 시작 주소
+  void* argv_start = esp;
+  // argc 저장
   esp -= 4;
   *(int*)esp = argc;
-
+  // fake return address
   esp -= 4;
-  *(uint32_t *)esp = 0;
+  *(uint32_t*)esp = 0;
+  *stackpointer = esp;
 }
 
 /* A thread function that loads a user process and starts it
