@@ -27,6 +27,7 @@ syscall_handler (struct intr_frame *f UNUSED)
     
   // number를 받아온다.
   int number = *(int*)f->esp;
+  printf("syscall number: %d\n", number);
   // halt만 인자 없음.
   if(number == SYS_HALT){
     halt();
