@@ -47,11 +47,9 @@ process_execute (const char *file_name)
 
 // 스택에 인자 저장하는 함수.
 void store_in_stack(int argc, char* argv[], void**stackpointer){
-  void* esp = *stackpointer;
-  printf("esp start: %p\n", esp);
-  printf("first arg: %s\n", argv[1]);
-  void* arg_addr[argc];
   int i, j;
+  void* esp = *stackpointer;
+  void* arg_addr[argc];
   
   // 문자열을 스택에 복사
   for(i = argc-1; i>=0; i--){
@@ -59,7 +57,6 @@ void store_in_stack(int argc, char* argv[], void**stackpointer){
     esp -= len;
     memcpy(esp, argv[i], len);
     arg_addr[i] = esp;
-    printf("%s in %p\n", (char*)esp, esp);
   }
   // 워드 정렬
   uintptr_t align = (uintptr_t)esp % 4;
@@ -67,31 +64,25 @@ void store_in_stack(int argc, char* argv[], void**stackpointer){
     esp -= align;
     memset(esp, 0, align);
   }
-  printf("align esp %p\n", esp);
   // argv 포인터들 저장
   esp -= 4;
   *(void**)esp = NULL; // argv[argc] = NULL
-  printf("%p in %p\n", *(void**)esp, esp);
   for(i = argc-1; i>=0; i--){
     esp -= 4;
     *(void**)esp = arg_addr[i];
-    printf("%p in %p\n", *(void**)esp, esp);
   }
   // argv 포인터의 시작 주소
   void* argv_start = esp;
   // argv 저장
   esp -= 4;
   *(void**)esp = argv_start;
-  printf("%p in %p\n", *(void**)esp, esp);
 
   // argc 저장
   esp -= 4;
   *(int*)esp = argc;
-  printf("%d in %p\n", *(int*)esp, esp);
   // fake return address
   esp -= 4;
   *(void**)esp = 0;
-  printf("%p in %p\n", *(void**)esp, esp);
   *stackpointer = esp;
 }
 
@@ -116,6 +107,7 @@ start_process (void *file_name_)
   char *token, *save_ptr;
   for (token = strtok_r(file_name_copy, " ", &save_ptr); token != NULL;
        token = strtok_r(NULL, " ", &save_ptr)) {
+    printf("'%s'\n", token);
     argv[argc++] = token;
   }
   /* Initialize interrupt frame and load executable. */
@@ -129,6 +121,9 @@ start_process (void *file_name_)
 
   if (!success)
     thread_exit();
+
+  // 성공 메시지 출력
+  printf("Success : %d\n", success);
 
   // stack에 저장필요.
   store_in_stack(argc, argv, &if_.esp);
