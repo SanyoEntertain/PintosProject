@@ -94,6 +94,10 @@ struct thread
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
+    // 부모 프로세스에 대한 포인터.
+    struct thread* parent;
+    struct list brother_list;
+    struct list_elem child;
 
     // add nice, recent_cpu
     int nice;
