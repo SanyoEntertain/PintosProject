@@ -609,7 +609,9 @@ init_thread (struct thread *t, const char *name, int priority)
 
   t->nice = 0;
   t->recent_cpu = 0;
-
+  
+  // child list 초기화
+  list_init(&t->child_list);
   // sem 초기화하기.
   sema_init(&t->sem_wait, 0);
   t->exit_status = 0;
