@@ -3,6 +3,7 @@
         "debug.h": "c",
         "*.inc": "c",
         "atomic": "c",
-        "thread.h": "c"
+        "thread.h": "c",
+        "synch.h": "c"
     }
 }

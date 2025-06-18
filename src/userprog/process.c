@@ -156,10 +156,33 @@ start_process (void *file_name_)
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
 int
-process_wait (tid_t child_tid UNUSED) 
+process_wait (tid_t child_tid) 
 {
-  int i;
-  while(true);
+  // child가 맞는지 확인. parent가 지금 thread인지를 확인한다.
+  // 으로 하려 했으나 tid로 thread 객체를 받을 방법이 없음. current의 child_list를 순회하며 찾는다.
+  struct thread* cur = thread_current();
+  struct thread* child;
+  struct list_elem *e;
+
+  bool isFound = false;
+  for(e = list_begin(&cur->child_list); e != list_end(&cur->child_list);
+      e = list_next(e))
+      {
+        struct thread *t = list_entry(e, struct thread, child_elem);
+        if(t->tid == child_tid){
+          child = t;
+          isFound = true;
+          break;
+        }
+      }
+  // 못 찾으면 fail.
+  if (!isFound){
+    return -1;
+  }
+
+  // wait해야 한다. 
+  sema_down(&child->sem_wait);
+
   return -1;
 }
 

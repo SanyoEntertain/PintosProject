@@ -59,8 +59,9 @@ void halt(void){
 
 void exit(int status){
   struct thread *cur = thread_current();
-  cur->status = status;
-  printf("%s: exit(%d)\n", cur->name, status);
+  cur->exit_status = status;
+  sema_up(&cur->sem_wait);
+  printf("%s: exit(%d)\n", cur->name, cur->exit_status);
   thread_exit();
 }
 

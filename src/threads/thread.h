@@ -5,6 +5,9 @@
 #include <list.h>
 #include <stdint.h>
 
+// lock 관련. thread.c 에서 옮김. 동작하는지 확인 필요.
+#include "threads/synch.h"
+
 /* States in a thread's life cycle. */
 enum thread_status
   {
@@ -96,8 +99,12 @@ struct thread
     struct list_elem elem;              /* List element. */
     // 부모 프로세스에 대한 포인터.
     struct thread* parent;
-    struct list brother_list;
-    struct list_elem child;
+    struct list child_list;
+    struct list_elem child_elem;
+
+    // wait semaphore
+    struct semaphore sem_wait;
+    int exit_status;
 
     // add nice, recent_cpu
     int nice;

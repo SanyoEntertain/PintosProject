@@ -9,7 +9,6 @@
 #include "threads/intr-stubs.h"
 #include "threads/palloc.h"
 #include "threads/switch.h"
-#include "threads/synch.h"
 #include "threads/vaddr.h"
 #ifdef USERPROG
 #include "userprog/process.h"
@@ -610,6 +609,10 @@ init_thread (struct thread *t, const char *name, int priority)
 
   t->nice = 0;
   t->recent_cpu = 0;
+
+  // sem 초기화하기.
+  sema_init(&t->sem_wait, 0);
+  t->exit_status = 0;
   list_push_back (&all_list, &t->allelem);
 }
 
