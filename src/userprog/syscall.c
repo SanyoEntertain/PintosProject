@@ -66,20 +66,7 @@ void exit(int status){
 
 // cmd_line 읽고, page 만들고, copy, 
 pid_t exec(const char *cmd_line){
-  if(cmd_line == NULL){
-    return -1;
-  }
-
-  char* cmd_copy = palloc_page(0);
-  if (cmd_copy == NULL) return -1;
-  strlcpy(cmd_copy, cmp_line, PGSIZE);
-
-  tid_t tid = process_execute(cmd_copy);
-  if(tid == TID_ERROR){
-    palloc_free_page(cmd_copy);
-    return -1;
-  }
-  return tid;
+  return process_execute(cmd_line);
 }
 
 int wait(pid_t pid){
