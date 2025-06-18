@@ -42,7 +42,7 @@ process_execute (const char *file_name)
   char *argv[64];
   int argc = 0;
   char *token, *save_ptr;
-  for (token = strtok_r(file_name_copy, " ", &save_ptr); token != NULL;
+  for (token = strtok_r(fn_copy, " ", &save_ptr); token != NULL;
        token = strtok_r(NULL, " ", &save_ptr)) {
     argv[argc++] = token;
   }
@@ -56,7 +56,7 @@ process_execute (const char *file_name)
 
 // 스택에 인자 저장하는 함수.
 void store_in_stack(int argc, char* argv[], void**stackpointer){
-  int i, j;
+  int i;
   void* esp = *stackpointer;
   void* arg_addr[argc];
   
