@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "debug.h": "c",
-        "*.inc": "c"
+        "*.inc": "c",
+        "atomic": "c",
+        "thread.h": "c"
     }
 }
