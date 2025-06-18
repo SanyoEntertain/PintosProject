@@ -67,21 +67,30 @@ void store_in_stack(int argc, char* argv[], void**stackpointer){
     esp -= align;
     memset(esp, 0, align);
   }
+  printf("align esp %p\n", esp);
   // argv 포인터들 저장
   esp -= 4;
   *(void**)esp = NULL; // argv[argc] = NULL
   for(i = argc-1; i>=0; i--){
     esp -= 4;
     *(void**)esp = arg_addr[i];
+    printf("%s in %p\n", (char*)esp, esp);
   }
   // argv 포인터의 시작 주소
   void* argv_start = esp;
+  // argv 저장
+  esp -= 4;
+  *(void**)esp = argv_start;
+  printf("%s in %p\n", (char*)esp, esp);
+
   // argc 저장
   esp -= 4;
   *(int*)esp = argc;
+  printf("%s in %p\n", (char*)esp, esp);
   // fake return address
   esp -= 4;
   *(uint32_t*)esp = 0;
+  printf("%s in %p\n", (char*)esp, esp);
   *stackpointer = esp;
 }
 
@@ -91,7 +100,6 @@ static void
 start_process (void *file_name_)
 { 
   char *file_name = file_name_;
-  printf("file name: %s\n", file_name);
 
   char *file_name_copy = palloc_get_page(0);
   if (file_name_copy == NULL)
@@ -109,7 +117,6 @@ start_process (void *file_name_)
        token = strtok_r(NULL, " ", &save_ptr)) {
     argv[argc++] = token;
   }
-  printf("first arg: %s\n", argv[1]);
   /* Initialize interrupt frame and load executable. */
   memset (&if_, 0, sizeof if_);
   if_.gs = if_.fs = if_.es = if_.ds = if_.ss = SEL_UDSEG;
