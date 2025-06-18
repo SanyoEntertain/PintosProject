@@ -38,8 +38,17 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
+  // 파싱 진행. 여기도 parsing 해야 make check가 동작함...
+  char *argv[64];
+  int argc = 0;
+  char *token, *save_ptr;
+  for (token = strtok_r(file_name_copy, " ", &save_ptr); token != NULL;
+       token = strtok_r(NULL, " ", &save_ptr)) {
+    argv[argc++] = token;
+  }
+
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (argv[0], PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
   return tid;
