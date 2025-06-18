@@ -169,6 +169,7 @@ process_wait (tid_t child_tid)
       e = list_next(e))
       {
         struct thread *t = list_entry(e, struct thread, child_elem);
+        if (t == NULL) continue;
         if(t->tid == child_tid){
           child = t;
           isFound = true;
