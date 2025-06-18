@@ -58,6 +58,7 @@ void halt(void){
 
 void exit(int status){
   struct thread *cur = thread_current();
+  cur->status = status;
   printf("%s: exit(%d)\n", cur->name, status);
   thread_exit();
 }
