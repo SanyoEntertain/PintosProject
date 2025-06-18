@@ -101,7 +101,6 @@ start_process (void *file_name_)
   struct intr_frame if_;
   bool success;
 
-   printf("\n\n\n%s\n\n\n", file_name);
   // 파싱 진행.
   char *argv[64];
   int argc = 0;
