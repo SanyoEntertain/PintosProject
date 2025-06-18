@@ -210,6 +210,12 @@ thread_print_stats (void)
    The code provided sets the new thread's `priority' member to
    PRIORITY, but no actual priority scheduling is implemented.
    Priority scheduling is the goal of Problem 1-3. */
+
+/* 
+새로운 스레드를 추가하고 priority를 정한다. function의 인자를 aux로 전달한다.
+이미 thread_unblock 함수에서 priority에 따라 ready_list에 넣는 로직을 구현했기에
+자동으로 ready_list는 priority로 정렬되게 된다.
+*/
 tid_t
 thread_create (const char *name, int priority,
                thread_func *function, void *aux) 
@@ -656,6 +662,9 @@ next_thread_to_run (void)
 
    After this function and its caller returns, the thread switch
    is complete. */
+/*
+ 새로운 thread를 Running status로 변경하고, 이전 스레드가 Dying status라면, 페이지를 정리한다.
+*/
 void
 thread_schedule_tail (struct thread *prev)
 {
@@ -693,6 +702,16 @@ thread_schedule_tail (struct thread *prev)
 
    It's not safe to call printf() until thread_schedule_tail()
    has completed. */
+/*
+  schedule은 block, yield, exit 등
+  현재 스레드에서 다음스레드로 넘어가야 할 때 호출된다.
+  또한 priority를 재계산 후 interrupt 될 때 호출되기도 한다.
+
+  switch threads 함수를 통해 스위칭을 하게 되는데,
+  kernel stack에 cur의 register 들을 저장하고, stack top esp를 저장한다.
+  변경될 쓰레드, 여기서 next의 stack top을 복원하고 다른 레지스터들을 stack에 올린다.
+  switch threads 로직은 switch.S에 구현되어 있다.
+*/
 static void
 schedule (void) 
 {
