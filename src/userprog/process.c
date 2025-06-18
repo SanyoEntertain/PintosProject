@@ -71,26 +71,27 @@ void store_in_stack(int argc, char* argv[], void**stackpointer){
   // argv 포인터들 저장
   esp -= 4;
   *(void**)esp = NULL; // argv[argc] = NULL
+  printf("%p in %p\n", *(void**)esp, esp);
   for(i = argc-1; i>=0; i--){
     esp -= 4;
     *(void**)esp = arg_addr[i];
-    printf("%s in %p\n", (char*)esp, esp);
+    printf("%p in %p\n", *(void**)esp, esp);
   }
   // argv 포인터의 시작 주소
   void* argv_start = esp;
   // argv 저장
   esp -= 4;
   *(void**)esp = argv_start;
-  printf("%s in %p\n", (char*)esp, esp);
+  printf("%p in %p\n", *(void**)esp, esp);
 
   // argc 저장
   esp -= 4;
   *(int*)esp = argc;
-  printf("%s in %p\n", (char*)esp, esp);
+  printf("%d in %p\n", *(int*)esp, esp);
   // fake return address
   esp -= 4;
-  *(uint32_t*)esp = 0;
-  printf("%s in %p\n", (char*)esp, esp);
+  *(void**)esp = 0;
+  printf("%p in %p\n", *(void**)esp, esp);
   *stackpointer = esp;
 }
 
