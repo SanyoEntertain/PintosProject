@@ -72,9 +72,27 @@ pid_t exec(const char *cmd_line){
     // child를 없앤다.
     return -1;
   // current가 sema_down을 해야 한다.
-  struct thread* cur = thread_current();
-  struct list_elem* child_elem = list_back(&cur->child_list);
-  struct thread* child = list_entry(child_elem, struct thread, elem);
+  struct thread* cur = thrad_current();
+  struct thread* child;
+
+  struct list_elem *e;
+  bool isFound = false;
+  for(e = list_begin(&cur->child_list); e != list_end(&cur->child_list);
+      e = list_next(e))
+      {
+        struct thread *t = list_entry(e, struct thread, elem);
+        if (t == NULL) continue;
+        if(t->tid == tid){
+          child = t;
+          isFound = true;
+          break;
+        }
+      }
+  // 못 찾으면 fail.
+  if (!isFound){
+    return -1;
+  }
+
   sema_down(&child->sem_exec);
   if (child->load_status == -1){
     return -1;
