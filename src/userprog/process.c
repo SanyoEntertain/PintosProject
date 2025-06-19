@@ -130,10 +130,10 @@ start_process (void *file_name_)
 
   // sema up 해주기.
   sema_up(&thread_current()->sem_exec);
-  if (!success)
+  if (!success){
     thread_current()->load_status = -1;
     thread_exit();
-    
+  }
   // 성공 메시지 출력
   printf("Success : %d\n", success);
 
