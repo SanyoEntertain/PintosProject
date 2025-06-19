@@ -612,9 +612,15 @@ init_thread (struct thread *t, const char *name, int priority)
   
   // child list 초기화
   list_init(&t->child_list);
+  // 이 스레드를 현재 스레드의 자식으로 만들기.
+  struct thread* cur = thread_current();
+  t->parent = cur;
+  list_push_back(&cur->child_list, &t->elem);
   // sem 초기화하기.
   sema_init(&t->sem_wait, 0);
   t->exit_status = 0;
+  sema_init(&t->sem_exec, 0);
+  t->load_status = 0;
   list_push_back (&all_list, &t->allelem);
 }
 

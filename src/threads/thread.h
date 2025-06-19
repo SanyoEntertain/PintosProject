@@ -100,12 +100,13 @@ struct thread
     // 부모 프로세스에 대한 포인터.
     struct thread* parent;
     struct list child_list;
-    struct list_elem child_elem;
 
     // wait semaphore
     struct semaphore sem_wait;
     int exit_status;
-
+   
+    struct semaphore sem_exec;
+    int load_status;
     // add nice, recent_cpu
     int nice;
     int recent_cpu;

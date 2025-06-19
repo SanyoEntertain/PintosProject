@@ -44,10 +44,10 @@ syscall_handler (struct intr_frame *f UNUSED)
       exit(*(int*)up_esp);
       break;
     case SYS_EXEC:
-      exec(*(char**)up_esp);
+      f->eax = exec(*(char**)up_esp);
       break;
     case SYS_WAIT:
-      wait(*(pid_t*)up_esp);
+      f->eax = wait(*(pid_t*)up_esp);
       break;
   }
 }
@@ -67,7 +67,19 @@ void exit(int status){
 
 // cmd_line 읽고, page 만들고, copy, 
 pid_t exec(const char *cmd_line){
-  return process_execute(cmd_line);
+  pid_t tid = process_execute(cmd_line);
+  if(tid == TID_ERROR)
+    // child를 없앤다.
+    return -1;
+  // current가 sema_down을 해야 한다.
+  struct thread* cur = thread_current();
+  struct list_elem* child_elem = list_back(&cur->child_list);
+  struct thread* child = list_entry(child_elem, struct thread, elem);
+  sema_down(&child->sem_exec);
+  if (child->load_status == -1){
+    return -1;
+  }
+  return tid;
 }
 
 int wait(pid_t pid){

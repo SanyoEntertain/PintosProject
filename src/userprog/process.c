@@ -125,13 +125,15 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load(argv[0], &if_.eip, &if_.esp);
-
   /* If load 
   failed, quit. */
 
+  // sema up 해주기.
+  sema_up(&thread_current()->sem_exec);
   if (!success)
+    thread_current()->load_status = -1;
     thread_exit();
-
+    
   // 성공 메시지 출력
   printf("Success : %d\n", success);
 
@@ -168,7 +170,7 @@ process_wait (tid_t child_tid)
   for(e = list_begin(&cur->child_list); e != list_end(&cur->child_list);
       e = list_next(e))
       {
-        struct thread *t = list_entry(e, struct thread, child_elem);
+        struct thread *t = list_entry(e, struct thread, elem);
         if (t == NULL) continue;
         if(t->tid == child_tid){
           child = t;
@@ -183,8 +185,7 @@ process_wait (tid_t child_tid)
 
   // wait해야 한다. 
   sema_down(&child->sem_wait);
-
-  return -1;
+  return child->exit_status;
 }
 
 /* Free the current process's resources. */
