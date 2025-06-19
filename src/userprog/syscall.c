@@ -92,9 +92,6 @@ pid_t exec(const char *cmd_line){
   if (!isFound){
     return -1;
   }
-  // 이 스레드를 현재 스레드의 자식으로 만들기.
-  child->parent = cur;
-  list_push_back(&cur->child_list, &child->elem);
 
   sema_down(&child->sem_exec);
   if (child->load_status == -1){

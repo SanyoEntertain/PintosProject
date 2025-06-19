@@ -252,6 +252,10 @@ thread_create (const char *name, int priority,
   sf->ebp = 0;
 
   intr_set_level (old_level);
+    // 이 스레드를 현재 스레드의 자식으로 만들기.
+  struct thread* cur = thread_current();
+  t->parent = cur;
+  list_push_back(&cur->child_list, &t->elem);
 
   /* Add to run queue. */
   thread_unblock (t);
