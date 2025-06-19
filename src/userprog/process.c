@@ -137,7 +137,7 @@ start_process (void *file_name_)
   // stack에 저장필요.
   store_in_stack(argc, argv, &if_.esp);
   // make check를 위해 잠시 주석.
-  //hex_dump(if_.esp , if_.esp , PHYS_BASE - if_.esp , true);
+  hex_dump(if_.esp , if_.esp , PHYS_BASE - if_.esp , true);
 
   palloc_free_page(file_name_copy);
   palloc_free_page(file_name);
