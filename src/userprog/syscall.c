@@ -93,7 +93,6 @@ pid_t exec(const char *cmd_line){
     return -1;
   }
   // 이 스레드를 현재 스레드의 자식으로 만들기.
-  struct thread* cur = thread_current();
   child->parent = cur;
   list_push_back(&cur->child_list, &child->elem);
 
