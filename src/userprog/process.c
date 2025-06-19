@@ -38,8 +38,17 @@ process_execute (const char *file_name)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
 
+  // 파싱 진행. 여기도 parsing 해야 make check가 동작함...
+  char *argv[64];
+  int argc = 0;
+  char *token, *save_ptr;
+  for (token = strtok_r(fn_copy, " ", &save_ptr); token != NULL;
+       token = strtok_r(NULL, " ", &save_ptr)) {
+    argv[argc++] = token;
+  }
+
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (argv[0], PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
   return tid;
@@ -47,7 +56,7 @@ process_execute (const char *file_name)
 
 // 스택에 인자 저장하는 함수.
 void store_in_stack(int argc, char* argv[], void**stackpointer){
-  int i, j;
+  int i;
   void* esp = *stackpointer;
   void* arg_addr[argc];
   
@@ -116,12 +125,15 @@ start_process (void *file_name_)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load(argv[0], &if_.eip, &if_.esp);
+  /* If load 
+  failed, quit. */
 
-  /* If load failed, quit. */
-
+  // sema up 해주기.
+  sema_up(&thread_current()->sem_exec);
   if (!success)
+    thread_current()->load_status = -1;
     thread_exit();
-
+    
   // 성공 메시지 출력
   printf("Success : %d\n", success);
 
@@ -146,9 +158,34 @@ start_process (void *file_name_)
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
 int
-process_wait (tid_t child_tid UNUSED) 
+process_wait (tid_t child_tid) 
 {
-  return -1;
+  // child가 맞는지 확인. parent가 지금 thread인지를 확인한다.
+  // 으로 하려 했으나 tid로 thread 객체를 받을 방법이 없음. current의 child_list를 순회하며 찾는다.
+  struct thread* cur = thread_current();
+  struct thread* child;
+  struct list_elem *e;
+
+  bool isFound = false;
+  for(e = list_begin(&cur->child_list); e != list_end(&cur->child_list);
+      e = list_next(e))
+      {
+        struct thread *t = list_entry(e, struct thread, elem);
+        if (t == NULL) continue;
+        if(t->tid == child_tid){
+          child = t;
+          isFound = true;
+          break;
+        }
+      }
+  // 못 찾으면 fail.
+  if (!isFound){
+    return -1;
+  }
+
+  // wait해야 한다. 
+  sema_down(&child->sem_wait);
+  return child->exit_status;
 }
 
 /* Free the current process's resources. */
