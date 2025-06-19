@@ -18,7 +18,6 @@ syscall_init (void)
 static void
 syscall_handler (struct intr_frame *f UNUSED) 
 {
-  printf ("system call!\n");
   // esp가 유효한지 검사한다.
   if(!is_user_vaddr(f->esp)){
     thread_exit();
@@ -27,7 +26,6 @@ syscall_handler (struct intr_frame *f UNUSED)
     
   // number를 받아온다.
   int number = *(int*)f->esp;
-  printf("syscall number: %d\n", number);
   // halt만 인자 없음.
   if(number == SYS_HALT){
     halt();

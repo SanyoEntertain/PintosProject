@@ -116,7 +116,6 @@ start_process (void *file_name_)
   char *token, *save_ptr;
   for (token = strtok_r(file_name_copy, " ", &save_ptr); token != NULL;
        token = strtok_r(NULL, " ", &save_ptr)) {
-    printf("'%s'\n", token);
     argv[argc++] = token;
   }
   /* Initialize interrupt frame and load executable. */
@@ -134,12 +133,11 @@ start_process (void *file_name_)
     thread_current()->load_status = -1;
     thread_exit();
   }
-  // 성공 메시지 출력
-  printf("Success : %d\n", success);
 
   // stack에 저장필요.
   store_in_stack(argc, argv, &if_.esp);
-  hex_dump(if_.esp , if_.esp , PHYS_BASE - if_.esp , true);
+  // make check를 위해 잠시 주석.
+  //hex_dump(if_.esp , if_.esp , PHYS_BASE - if_.esp , true);
 
   palloc_free_page(file_name_copy);
   palloc_free_page(file_name);
