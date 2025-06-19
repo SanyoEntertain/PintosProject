@@ -72,7 +72,7 @@ pid_t exec(const char *cmd_line){
     // child를 없앤다.
     return -1;
   // current가 sema_down을 해야 한다.
-  struct thread* cur = thrad_current();
+  struct thread* cur = thread_current();
   struct thread* child;
 
   struct list_elem *e;
